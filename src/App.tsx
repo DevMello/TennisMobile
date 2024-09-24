@@ -5,7 +5,7 @@ import { Home } from "@/views/Home";
 import { App } from "konsta/react";
 
 export default function Root() {
-  const [theme, setTheme] = useState<"ios" | "material">("material");
+  const [theme, setTheme] = useState<"ios" | "material">("ios");
 
   useLayoutEffect(() => {
     if (window.location.href.includes("safe-areas")) {
@@ -26,7 +26,7 @@ export default function Root() {
     <BrowserRouter>
       <App safeAreas theme={theme}>
         <Routes>
-          <Route path="/" element={<Home theme={theme} onTheme={setTheme} />} />
+          <Route path="/" element={<Home/>} />
           <Route path="/view" element={<View />} />
         </Routes>
       </App>

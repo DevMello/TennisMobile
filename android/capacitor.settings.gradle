@@ -2,6 +2,9 @@
 include ':capacitor-android'
 project(':capacitor-android').projectDir = new File('../node_modules/.pnpm/@capacitor+android@5.7.8_@capacitor+core@5.7.8/node_modules/@capacitor/android/capacitor')
 
+include ':capacitor-community-bluetooth-le'
+project(':capacitor-community-bluetooth-le').projectDir = new File('../node_modules/.pnpm/@capacitor-community+bluetooth-le@6.0.1_@capacitor+core@5.7.8/node_modules/@capacitor-community/bluetooth-le/android')
+
 include ':capacitor-camera'
 project(':capacitor-camera').projectDir = new File('../node_modules/.pnpm/@capacitor+camera@5.0.10_@capacitor+core@5.7.8/node_modules/@capacitor/camera/android')
 

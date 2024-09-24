@@ -22,8 +22,9 @@ export function View() {
     }
   };
 
-  const startListen = async (deviceId) => {
+  const startListen = async (deviceId: string) => {
     await BleClient.startNotifications(
+      deviceId,
       BLE_SERVICE_UUID,
       BLE_CHARACTERISTIC_UUID,
       (value) => {

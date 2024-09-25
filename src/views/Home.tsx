@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Page, Navbar, Block, List, ListItem, Button, Toolbar } from 'konsta/react';
 import { Battery, BatteryCharging, Bluetooth, Folder, AppWindow, Wrench, ChevronRight, ChevronDown, CircleUserRound } from 'lucide-react';
+import { Wifi } from 'ln-capacitor-wifi';
 import { Link} from 'react-router-dom';
 import { BleClient } from '@capacitor-community/bluetooth-le';
+import axios from 'axios';
 
 const BLE_SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';  // Your service UUID
 const BLE_CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';  // Your characteristic UUID
@@ -12,6 +14,77 @@ export function Home() {
   const [device, setDevice] = useState(null);
   const [dataChunks, setDataChunks] = useState([]);
   const [name, setName] = useState("Not Connected");
+  const [webServer, setWebServer] = useState(false);
+
+  const connectToWifi = async () => {
+    await Wifi.checkPermissions().then((result) => {
+      if (result) {
+        console.log('Permissions granted');
+      } else {
+        console.log('No permissions');
+        Wifi.requestPermissions().then((result) => {
+          if (result) {
+            console.log('Permissions granted');
+          } else {
+            console.log('No permissions');
+            return;
+          }
+        });
+      }
+      // sleep for 3 seconds to wait for wifi start up
+      setTimeout(async () => {
+        await Wifi.connectToWifiBySsidAndPassword({
+          ssid: 'DataLog',
+          password: ''
+        }).then(async (result) => {
+          if (result.wasSuccess) {
+            console.log('Connected to wifi');
+            await Wifi.getCurrentWifi().then((result) => {
+              console.log('Connected to wifi:', result.currentWifi?.ssid);
+              if (result.currentWifi) {
+                setTimeout(() => {
+                  //download the csv file at http://192.168.4.1/shots.csv
+                  axios.get('http://192.168.4.1/shots.csv', {
+                    responseType: 'blob', // Handle the CSV file as a binary Blob
+                }).then((response) => {
+                    const reader = new FileReader();
+                    
+                    // Convert the blob to text
+                    reader.onload = () => {
+                        console.log(reader.result); // Log the CSV content as text
+                    };
+                    
+                    // Read the Blob data as text
+                    reader.readAsText(response.data);
+                    
+                }).catch((error) => {
+                    console.error("Fetch error: ", error);
+                });
+                }, 4000);
+              }
+            });
+
+            // setTimeout(() => {
+            //   //disconnect from wifi
+            //   disconnect();
+            //   //handleStopServer();
+            // }, 10000);
+            
+            
+          } else {
+            console.log('Failed to connect to wifi');
+          }
+        }
+        );
+      }, 3000);
+    });
+  }
+
+
+
+  const disconnect = async () => {
+    Wifi.disconnectAndForget();
+  }
 
   const connectToDevice = async (deviceId) => {
     try {
@@ -94,6 +167,7 @@ export function Home() {
       dataView.setUint8(0, 1); // Value to turn the server on
       await BleClient.write(device, BLE_SERVICE_UUID, BLE_CHARACTERISTIC_UUID, dataView);
       console.log("Server started");
+      setWebServer(true);
     } catch (error) {
       console.error("Error while starting server:", error);
     }
@@ -111,9 +185,15 @@ export function Home() {
       dataView.setUint8(0, 0); // Value to turn the server off
       await BleClient.write(device, BLE_SERVICE_UUID, BLE_CHARACTERISTIC_UUID, dataView);
       console.log("Server stopped");
+      setWebServer(false);
     } catch (error) {
       console.error("Error while stopping server:", error);
     }
+  };
+
+  const handleGetData = async () => {
+    await handleStartServer();
+    await connectToWifi();
   };
 
 
@@ -139,7 +219,7 @@ export function Home() {
       {/* Main Content */}
       <Block className="space-y-4 pb-20">
 
-      {/* Start Game Session */}1
+      {/* Start Game Session */}
       <div className="bg-gray-800 rounded-lg p-4">
         <h3 className="text-xl font-bold dark:text-white">Game Session</h3>
         <p className="text-gray-500 dark:text-gray-300">
@@ -147,6 +227,16 @@ export function Home() {
         </p>
         <Button large className="w-full bg-blue-500 text-white k-color-brand-blue mt-4" onClick={handleConnect}>
           CONNECT
+        </Button>
+      </div>
+        {/* Pull Data*/}
+      <div className="bg-gray-800 rounded-lg p-4">
+        <h3 className="text-xl font-bold dark:text-white">Download Latest Data</h3>
+        <p className="text-gray-500 dark:text-gray-300">
+          Download the latest data from the device.
+        </p>
+        <Button large className="w-full bg-blue-500 text-white k-color-brand-blue mt-4" onClick={handleGetData} id="get">
+          GET
         </Button>
       </div>
 

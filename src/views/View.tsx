@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BleClient } from '@capacitor-community/bluetooth-le';
+import { Wifi } from 'ln-capacitor-wifi';
 
 const BLE_SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';  // Your service UUID
 const BLE_CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';  // Your characteristic UUID
@@ -8,6 +9,9 @@ export function View() {
   const [device, setDevice] = useState(null);
   const [dataChunks, setDataChunks] = useState([]);
   const [log, setLog] = useState('');
+
+  
+
 
   const connectToDevice = async (deviceId) => {
     try {
